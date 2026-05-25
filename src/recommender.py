@@ -1,6 +1,5 @@
 """
 posts -> mood scores -> target features -> k-NN songs.
-
 Pipeline:
   1. Encode (image, caption) into a fused 512-d CLIP embedding.
   2. Score against precomputed mood anchor text embeddings (cosine similarity).
@@ -40,7 +39,7 @@ class Recommendation:
     artist_name: str
     album_name: str
     genre: str
-    score: float  # lower = better (Euclidean distance)
+    score: float  # lower is better (Euclidean distance)
 
 
 def _load_dataset(path: str) -> pd.DataFrame:
@@ -71,12 +70,7 @@ def _knn(songs: pd.DataFrame, target: np.ndarray, k: int) -> list[Recommendation
 
 class MusicMoodRecommender:
 
-    def __init__(
-        self,
-        dataset_path: str,
-        image_weight: float = 0.5,
-        softmax_temp: float = 100.0,
-    ) -> None:
+    def __init__(self, dataset_path: str, image_weight: float = 0.5, softmax_temp: float = 100.0,) -> None:
         self.image_weight = image_weight
         self.softmax_temp = softmax_temp
         self._encoder = PostEncoder()
@@ -96,12 +90,7 @@ class MusicMoodRecommender:
         scores = F.softmax(sims * self.softmax_temp, dim=0)
         return scores.cpu().numpy()
 
-    def recommend(
-        self,
-        image: Image.Image | None = None,
-        caption: str | None = None,
-        k: int = 10,
-    ) -> list[Recommendation]:
+    def recommend(self, image: Image.Image | None = None, caption: str | None = None, k: int = 10,) -> list[Recommendation]:
         embedding = self._encoder.encode(image, caption, self.image_weight)
         scores = self._mood_scores(embedding)
         target = (scores @ self._feature_matrix).astype(np.float32)
