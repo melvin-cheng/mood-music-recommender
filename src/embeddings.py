@@ -1,5 +1,5 @@
 """
-Embedding utilities for encoding images and captions.
+ Utilities for encoding images and captions.
 """
 import torch
 import torch.nn.functional as F

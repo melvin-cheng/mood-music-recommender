@@ -39,7 +39,7 @@ class Recommendation:
     artist_name: str
     album_name: str
     genre: str
-    score: float  # lower is better (Euclidean distance)
+    score: float 
 
 
 def _load_dataset(path: str) -> pd.DataFrame:
