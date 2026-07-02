@@ -26,3 +26,8 @@ data/
 # IDEs
 .vscode/
 .idea/
+
+# Frontend
+front-end/node_modules/
+front-end/dist/
+front-end/.vite/
