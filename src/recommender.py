@@ -1,11 +1,9 @@
 """
-posts -> mood scores -> target features -> k-NN songs.
-Pipeline:
-  1. Encode (image, caption) into a fused 512-d CLIP embedding.
-  2. Score against precomputed mood anchor text embeddings (cosine similarity).
-  3. Softmax over scores -> mood distribution.
-  4. Weighted mix of mood target feature vectors -> retrieval target.
-  5. Euclidean k-NN against the songs dataset in normalized feature space.
+1. Encode (image, caption) into a 512-d CLIP embedding.
+2. Score against precomputed mood anchor text embeddings using cosine similarity.
+3. Softmax over scores -> mood distribution.
+4. Weighted mix of mood target feature vectors -> retrieval target.
+5. Euclidean k-NN against the songs dataset in normalized feature space.
 """
 from __future__ import annotations
 from dataclasses import dataclass

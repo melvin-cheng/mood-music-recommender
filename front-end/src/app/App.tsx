@@ -150,7 +150,7 @@ export default function App() {
     );
   };
 
-  const handleCreate = (imageUrl: string, caption: string) => {
+  const handleCreate = (imageUrl: string, caption: string, songs: Song[]) => {
     if (!currentUser) return;
     const newPost: Post = {
       id: `post-${Date.now()}`,
@@ -160,7 +160,7 @@ export default function App() {
       likes: 0,
       liked: false,
       timestamp: new Date(),
-      songs: pickSongs(),
+      songs,
       selectedSongId: null,
     };
     setPosts((prev) => [newPost, ...prev]);

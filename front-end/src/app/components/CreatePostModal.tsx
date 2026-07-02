@@ -1,24 +1,29 @@
 import { useState, useRef, useCallback } from 'react';
 import { X, ImagePlus, Loader2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
+import type { Song } from '../App';
+import { fetchRecommendations, tracksToSongs } from '../api';
 
 interface Props {
   onClose: () => void;
-  onCreate: (imageUrl: string, caption: string) => void;
+  onCreate: (imageUrl: string, caption: string, songs: Song[]) => void;
 }
 
 export function CreatePostModal({ onClose, onCreate }: Props) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
   const [caption, setCaption] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFile = (file: File) => {
-    if (!file.type.startsWith('image/')) return;
+  const handleFile = (f: File) => {
+    if (!f.type.startsWith('image/')) return;
+    setFile(f);
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(f);
   };
 
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -33,12 +38,19 @@ export function CreatePostModal({ onClose, onCreate }: Props) {
     if (file) handleFile(file);
   };
 
-  const handleSubmit = () => {
-    if (!preview || !caption.trim()) return;
+  const handleSubmit = async () => {
+    if (!preview || !caption.trim() || isSubmitting) return;
     setIsSubmitting(true);
-    setTimeout(() => {
-      onCreate(preview, caption.trim());
-    }, 500);
+    setError(null);
+    try {
+      const resp = await fetchRecommendations(file, caption.trim());
+      const songs = tracksToSongs(resp);
+      // On success the parent unmounts this modal, so no need to reset state.
+      onCreate(preview, caption.trim(), songs);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not reach the recommender.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -136,7 +148,7 @@ export function CreatePostModal({ onClose, onCreate }: Props) {
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
                 <button
-                  onClick={(e) => { e.stopPropagation(); setPreview(null); }}
+                  onClick={(e) => { e.stopPropagation(); setPreview(null); setFile(null); }}
                   style={{
                     position: 'absolute',
                     top: '12px',
@@ -221,6 +233,23 @@ export function CreatePostModal({ onClose, onCreate }: Props) {
             </div>
           </div>
 
+          {/* Error */}
+          {error && (
+            <div
+              style={{
+                marginTop: '12px',
+                padding: '10px 12px',
+                borderRadius: '10px',
+                background: 'rgba(220,38,38,0.12)',
+                border: '1px solid rgba(220,38,38,0.35)',
+                color: '#fca5a5',
+                fontSize: '13px',
+              }}
+            >
+              {error}
+            </div>
+          )}
+
           {/* Submit */}
           <button
             onClick={handleSubmit}
@@ -249,7 +278,7 @@ export function CreatePostModal({ onClose, onCreate }: Props) {
             {isSubmitting ? (
               <>
                 <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                Posting…
+                Finding songs…
               </>
             ) : (
               'Share Post'
